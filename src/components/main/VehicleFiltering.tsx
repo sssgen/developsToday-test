@@ -1,17 +1,14 @@
 "use client";
 
 import { useState } from "react";
-import type Vehicle from "@/types/vehicle";
+import type { Vehicle } from "@/types/vehicle";
 import { useRouter } from "next/navigation";
 import Button from "@/components/Button";
-import Link from "next/link";
 
 const VehicleFiltering = ({ vehicles }: { vehicles: Vehicle[] }) => {
     const router = useRouter();
 
-    // ??? we cant use makeId as an option for fetching (because 200 unique IDs is not good for UX/UI),
-    // we can fetch data with makeName and makeYear, but the provided link for fetching is not correct
-    const [selectedMake, setSelectedMake] = useState("");
+    const [selectedMakeName, setSelectedMake] = useState("");
     const [selectedYear, setSelectedYear] = useState("");
 
     const handleMakeChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
@@ -24,10 +21,16 @@ const VehicleFiltering = ({ vehicles }: { vehicles: Vehicle[] }) => {
 
     const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
-        if (router) {
-            router.push(
-                `/result/${selectedMake.toLowerCase()}/${selectedYear.toLowerCase()}`
-            );
+
+        const selectedMakeId =
+            vehicles.find(
+                (vehicle) =>
+                    vehicle.MakeName.toLowerCase() ===
+                    selectedMakeName.toLowerCase()
+            )?.MakeId || -1;
+
+        if (router && selectedYear && selectedMakeName) {
+            router.push(`/result/${selectedMakeId}/${selectedYear}`);
         }
     };
 
@@ -42,7 +45,7 @@ const VehicleFiltering = ({ vehicles }: { vehicles: Vehicle[] }) => {
             >
                 <div className='flex flex-row justify-center items-center gap-4 w-full'>
                     <select
-                        value={selectedMake}
+                        value={selectedMakeName}
                         onChange={handleMakeChange}
                         className='text-black max-w-1/2 h-8 px-2 form-select block w-full border-black-800 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm'
                     >
@@ -75,21 +78,12 @@ const VehicleFiltering = ({ vehicles }: { vehicles: Vehicle[] }) => {
                         ))}
                     </select>
                 </div>
-                {!selectedYear || !selectedMake ? (
-                    <Button
-                        disabled
-                        className='opacity-50 cursor-not-allowed bg-black py-2 px-4 select-none'
-                    >
-                        Next
-                    </Button>
-                ) : (
-                    <Link
-                        href={`/result/${selectedMake.toLowerCase()}/${selectedYear.toLowerCase()}`}
-                        className='bg-black py-2 px-4 inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2'
-                    >
-                        Next
-                    </Link>
-                )}
+                <Button
+                    disabled={!selectedYear || !selectedMakeName}
+                    className='disabled:opacity-50 disabled:cursor-not-allowed bg-black py-2 px-4 select-none'
+                >
+                    Next
+                </Button>
             </form>
         </div>
     );
